@@ -29,12 +29,9 @@ import (
 )
 
 var (
+	// A configurable size of the buffered work queue
 	QueueSize = 128
 )
-
-func init() {
-
-}
 
 type Requirements interface {
 	AddAction(json string) error
@@ -103,18 +100,17 @@ func (s *actionStore) AddAction(jsonData string) (err error) {
 }
 
 func (s *actionStore) GetStats() string {
-	o := make([]*output, len(s.actions))
-	var count int
+	// the length of actions may change in a separate thread
+	var ret []*output
 	for name, stat := range s.actions {
-		o[count] = &output{
+		ret = append(ret, &output{
 			Name:    name,
 			Average: stat.avg,
-		}
-		count++
+		})
 	}
-	data, err := json.MarshalIndent(o, "", "\t")
+	data, err := json.MarshalIndent(ret, "", "\t")
 	if err != nil {
-		// according to proto no better way to handle error
+		// according to specified function prototype no way to handle error
 		log.Printf("failed to marshal output: %v\n", err)
 		return ""
 	}
